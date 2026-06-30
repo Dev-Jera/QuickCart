@@ -5,6 +5,6 @@ WORKDIR /app
 COPY backend/ /app/
 
 RUN pip install --upgrade pip
-RUN pip install django djangorestframework psycopg2-binary python-dotenv
+RUN pip install -r requirements.txt
 
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
