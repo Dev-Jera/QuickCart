@@ -32,7 +32,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = os.getenv(
     "DJANGO_ALLOWED_HOSTS",
-    "localhost,127.0.0.1,0.0.0.0",
+    "localhost,127.0.0.1,0.0.0.0,testserver",
 ).split(",")
 
 
@@ -50,6 +50,18 @@ INSTALLED_APPS = [
     "users",
     "rest_framework",
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
