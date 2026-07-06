@@ -16,6 +16,8 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Order.objects.prefetch_related("items__product").order_by("-created_at")
 
+        # Staff users need the whole queue for fulfilment.
+        # Customers should only ever see their own order history.
         if self.request.user.is_staff:
             return queryset
 
@@ -38,6 +40,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     )
     def analytics(self, request):
         queryset = Order.objects.all()
+        # Cancelled orders should stay visible in counts, but not inflate revenue.
         completed_orders = queryset.exclude(status="cancelled")
         revenue = sum(order.total_price for order in completed_orders)
 

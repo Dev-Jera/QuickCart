@@ -53,6 +53,8 @@ class OrderSerializer(serializers.ModelSerializer):
 
             for item in items_data:
                 try:
+                    # Lock the product row while stock is checked and reduced.
+                    # This avoids two checkouts selling the same last item.
                     product = Product.objects.select_for_update().get(
                         id=item["product_id"]
                     )

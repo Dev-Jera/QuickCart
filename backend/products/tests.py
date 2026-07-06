@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Product
+from .models import Category, Product
 
 
 class ProductApiTests(APITestCase):
@@ -13,17 +13,19 @@ class ProductApiTests(APITestCase):
         self.customer = User.objects.create_user(
             username="customer", password="pass12345"
         )
+        self.electronics = Category.objects.get(slug="electronics")
+        self.home = Category.objects.get(slug="home")
         Product.objects.create(
             name="Wireless Mouse",
             description="Ergonomic mouse",
-            category="electronics",
+            category=self.electronics,
             price="25.00",
             stock=10,
         )
         Product.objects.create(
             name="Desk Lamp",
             description="LED lamp",
-            category="home",
+            category=self.home,
             price="45.00",
             stock=4,
         )
@@ -34,6 +36,12 @@ class ProductApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["name"], "Wireless Mouse")
+
+    def test_customer_can_list_categories(self):
+        response = self.client.get("/api/categories/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(response.data["count"], 2)
 
     def test_non_admin_cannot_create_product(self):
         self.client.force_authenticate(self.customer)
@@ -65,5 +73,6 @@ class ProductApiTests(APITestCase):
             },
         )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertTrue(Product.objects.filter(name="Face Cream").exists())
+        self.assertTrue(Category.objects.filter(slug="beauty").exists())

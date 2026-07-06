@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('QuickCart Admin') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/quickcart_admin.css' %}?v=4">
+{% endblock %}
+
+{% block branding %}
+<div id="site-name" class="quickcart-admin-brand">
+  <a href="{% url 'admin:index' %}">
+    <span class="quickcart-admin-mark">Q</span>
+    <span>
+      <strong>QuickCart</strong>
+      <small>Admin dashboard</small>
+    </span>
+  </a>
+</div>
+{% if user.is_anonymous %}
+  {% include "admin/color_theme_toggle.html" %}
+{% endif %}
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

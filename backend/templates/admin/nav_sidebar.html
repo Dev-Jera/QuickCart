@@ -1,0 +1,15 @@
+{% load i18n %}
+<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="{% translate 'Toggle navigation' %}"></button>
+<nav class="sticky" id="nav-sidebar" aria-label="{% translate 'Sidebar' %}">
+  <input type="search" id="nav-filter"
+         placeholder="{% translate 'Filter navigation...' %}"
+         aria-label="{% translate 'Filter navigation items' %}">
+  {% include 'admin/app_list.html' with app_list=available_apps show_changelinks=False %}
+  {% if user.is_authenticated %}
+    <div class="quickcart-sidebar-user">
+      <span>{{ user.get_username|slice:":2"|upper }}</span>
+      <strong>{{ user.get_username }}</strong>
+      <small>Administrator</small>
+    </div>
+  {% endif %}
+</nav>

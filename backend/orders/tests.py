@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from products.models import Product
+from products.models import Category, Product
 
 from .models import Order
 
@@ -18,10 +18,11 @@ class OrderApiTests(APITestCase):
         self.admin = User.objects.create_user(
             username="admin", password="pass12345", is_staff=True
         )
+        self.category = Category.objects.get(slug="fashion")
         self.product = Product.objects.create(
             name="Backpack",
             description="Travel backpack",
-            category="fashion",
+            category=self.category,
             price="80.00",
             stock=5,
         )
