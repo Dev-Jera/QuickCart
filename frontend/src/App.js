@@ -204,8 +204,11 @@ function SplashView({ setView }) {
           <div><strong>4.8 star</strong><span>Average rating</span></div>
         </div>
       </section>
-      <button className="splash-scroll" onClick={() => setView('shop')} type="button" aria-label="Enter shop">
-        down
+      <button className="splash-scroll" onClick={() => setView('shop')} type="button">
+        <span>Explore shop</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="m7 10 5 5 5-5" />
+        </svg>
       </button>
     </main>
   );

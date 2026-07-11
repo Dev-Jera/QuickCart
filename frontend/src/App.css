@@ -257,16 +257,40 @@ button:disabled {
   left: 50%;
   bottom: clamp(8px, 2vw, 22px);
   z-index: 26;
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px 0 17px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 999px;
   color: #4d3e64;
   background: var(--white);
   box-shadow: 0 2px 8px rgba(36, 22, 50, 0.22);
-  font-size: 19px;
+  font-size: 12px;
+  font-weight: 800;
   transform: translateX(-50%);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.splash-scroll:hover {
+  box-shadow: 0 6px 18px rgba(36, 22, 50, 0.3);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.splash-scroll:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.48);
+  outline-offset: 3px;
+}
+
+.splash-scroll svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .app-header {
