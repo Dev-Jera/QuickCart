@@ -293,7 +293,12 @@ function Filters() {
 function ShopView({ setView }) {
   const dispatch = useDispatch();
   const { items, status, error } = useSelector((state) => state.products);
+  const filters = useSelector((state) => state.products.filters);
   const user = useSelector((state) => state.auth.user);
+  const retryCatalog = () => {
+    dispatch(fetchProducts(filters));
+    dispatch(fetchCategories());
+  };
 
   return (
     <main className="shop-screen">
@@ -312,11 +317,17 @@ function ShopView({ setView }) {
 
         <section className="shop-product-grid" aria-label="Product catalog">
           {status === 'loading' && <p>Loading products...</p>}
-          {status === 'failed' && <p className="notice">{error}</p>}
+          {status === 'failed' && (
+            <div className="catalog-error" role="alert">
+              <h3>We couldn’t load the shop</h3>
+              <p>{error}</p>
+              <button type="button" onClick={retryCatalog}>Try again</button>
+            </div>
+          )}
           {status === 'succeeded' && items.length === 0 && (
             <div className="empty-catalog">
               <h2>No products yet</h2>
-              <p>Products will appear here after an admin adds them from the dashboard.</p>
+              <p>There are no products to show right now. Please check back soon.</p>
               {user?.is_staff ? (
                 <button className="primary" onClick={() => setView('admin')} type="button">
                   Add Product
@@ -432,7 +443,7 @@ function ProductDetailView({ setView, routeProductId }) {
       dispatch(fetchOrders());
       setView('orders');
     } catch (error) {
-      setCheckoutError(errorMessage(error, 'Could not place this order.'));
+      setCheckoutError(errorMessage(error, 'Your order was not placed. Please check your details and try again.'));
     } finally {
       setIsProcessing(false);
     }
@@ -617,7 +628,7 @@ function CartView({ setView }) {
       setCheckoutOpen(false);
       setView('orders');
     } catch (error) {
-      setCheckoutError(errorMessage(error, 'Could not place this order.'));
+      setCheckoutError(errorMessage(error, 'Your order was not placed. Please check your details and try again.'));
     } finally {
       setIsProcessing(false);
     }
@@ -884,6 +895,8 @@ function OrdersView({ setView }) {
   const dispatch = useDispatch();
   const token = useSelector((state) => state.auth.token);
   const orders = useSelector((state) => state.orders.items);
+  const orderStatus = useSelector((state) => state.orders.status);
+  const orderError = useSelector((state) => state.orders.error);
 
   useEffect(() => {
     if (token) {
@@ -905,7 +918,17 @@ function OrdersView({ setView }) {
           </p>
         </header>
 
-        {token && orders.length > 0 && (
+        {token && orderStatus === 'loading' && <p className="notice" role="status">Loading your orders…</p>}
+
+        {token && orderStatus === 'failed' && (
+          <div className="catalog-error" role="alert">
+            <h3>We couldn’t load your orders</h3>
+            <p>{orderError}</p>
+            <button type="button" onClick={() => dispatch(fetchOrders())}>Try again</button>
+          </div>
+        )}
+
+        {token && orderStatus === 'succeeded' && orders.length > 0 && (
           <div className="orders-list">
             {orders.map((order) => {
               const itemCount = order.items?.reduce((sum, item) => sum + Number(item.quantity || 0), 0) || 0;
@@ -938,7 +961,7 @@ function OrdersView({ setView }) {
           </div>
         )}
 
-        {token && (
+        {token && orderStatus === 'succeeded' && (
           <section className="orders-empty-panel">
             <img src={logoPath} alt="" aria-hidden="true" />
             <h2>{orders.length === 0 ? "You don't have any orders yet" : "That's your order history so far"}</h2>
@@ -1000,7 +1023,7 @@ function AdminView() {
       setEditingId('');
       setForm(emptyProductForm);
     } catch (error) {
-      setAdminError(errorMessage(error, 'Could not save product.'));
+      setAdminError(errorMessage(error, 'Your product changes could not be saved. Please review the form and try again.'));
     }
   };
 

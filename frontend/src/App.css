@@ -731,6 +731,43 @@ button:disabled {
   color: #b4234e;
 }
 
+.catalog-error {
+  grid-column: 1 / -1;
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid #efd5e2;
+  border-radius: 12px;
+  color: #4f2942;
+  background: #fff5fa;
+}
+
+.catalog-error h3,
+.catalog-error p {
+  margin: 0;
+}
+
+.catalog-error h3 {
+  color: #39112b;
+  font-size: 16px;
+}
+
+.catalog-error p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.catalog-error button {
+  min-height: 38px;
+  margin-top: 4px;
+  padding: 0 16px;
+  border-radius: 8px;
+  color: #fff;
+  background: #81285f;
+  font-weight: 800;
+}
+
 .filters {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;

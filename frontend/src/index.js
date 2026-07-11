@@ -5,23 +5,25 @@ import './index.css';
 import App from './App';
 import { store } from './store';
 
-// Workaround for Chrome dev-mode ResizeObserver warnings.
-// This error can be thrown by the browser while observing layout changes
-// and does not usually indicate a real application failure.
+// Chrome can report this harmless layout warning as a runtime error while the
+// development overlay is active. Ignore only this specific browser warning.
+const isResizeObserverWarning = (message = '') =>
+  String(message).startsWith('ResizeObserver loop completed with undelivered notifications');
+
 window.addEventListener('error', (event) => {
   const message = event?.message || event?.error?.message;
-  if (message === 'ResizeObserver loop completed with undelivered notifications') {
+  if (isResizeObserverWarning(message)) {
     event.preventDefault();
     event.stopImmediatePropagation();
   }
-});
+}, true);
 
 window.addEventListener('unhandledrejection', (event) => {
   const message = event?.reason?.message;
-  if (message === 'ResizeObserver loop completed with undelivered notifications') {
+  if (isResizeObserverWarning(message)) {
     event.preventDefault();
   }
-});
+}, true);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

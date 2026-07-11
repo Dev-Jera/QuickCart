@@ -20,6 +20,27 @@ const hasUsableToken = (getState) => Boolean(getState().auth.token);
 
 const apiErrorMessage = (error, fallback) => {
   const data = error.response?.data;
+  const status = error.response?.status;
+
+  if (!error.response) {
+    return 'We could not connect right now. Check your internet connection and try again.';
+  }
+
+  if (status === 401) {
+    return 'The username or password you entered is incorrect.';
+  }
+
+  if (status === 403) {
+    return 'You do not have permission to complete this action.';
+  }
+
+  if (status === 429) {
+    return 'Too many attempts. Please wait a moment and try again.';
+  }
+
+  if (status >= 500) {
+    return 'Our service is temporarily unavailable. Please try again shortly.';
+  }
 
   if (typeof data === 'string') {
     return data;
@@ -30,8 +51,13 @@ const apiErrorMessage = (error, fallback) => {
   }
 
   if (data && typeof data === 'object') {
+    const fieldLabels = { username: 'Username', email: 'Email', password: 'Password', non_field_errors: '' };
     return Object.entries(data)
-      .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+      .map(([field, messages]) => {
+        const message = Array.isArray(messages) ? messages.join(' ') : messages;
+        const label = fieldLabels[field] ?? field.replaceAll('_', ' ');
+        return label ? `${label}: ${message}` : message;
+      })
       .join(' ');
   }
 
@@ -45,7 +71,7 @@ export const fetchProducts = createAsyncThunk(
       const response = await api.get('/products/', { params: filters });
       return listFromResponse(response.data);
     } catch (error) {
-      return rejectWithValue('Could not load products. Make sure the backend is running.');
+      return rejectWithValue(apiErrorMessage(error, 'We could not load the products. Please try again.'));
     }
   }
 );
@@ -57,7 +83,7 @@ export const fetchCategories = createAsyncThunk(
       const response = await api.get('/categories/');
       return listFromResponse(response.data);
     } catch (error) {
-      return rejectWithValue('Could not load categories.');
+      return rejectWithValue(apiErrorMessage(error, 'We could not load the categories. Please try again.'));
     }
   }
 );
@@ -71,7 +97,7 @@ export const createProduct = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(apiErrorMessage(error, 'Could not create product.'));
+      return rejectWithValue(apiErrorMessage(error, 'The product could not be added. Please try again.'));
     }
   }
 );
@@ -85,7 +111,7 @@ export const updateProduct = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(apiErrorMessage(error, 'Could not update product.'));
+      return rejectWithValue(apiErrorMessage(error, 'Your product changes could not be saved. Please try again.'));
     }
   }
 );
@@ -97,7 +123,7 @@ export const deleteProduct = createAsyncThunk(
       await api.delete(`/products/${id}/`, { headers: authHeader(getState) });
       return id;
     } catch (error) {
-      return rejectWithValue(apiErrorMessage(error, 'Could not delete product.'));
+      return rejectWithValue(apiErrorMessage(error, 'The product could not be removed. Please try again.'));
     }
   }
 );
@@ -111,7 +137,7 @@ export const login = createAsyncThunk('auth/login', async (credentials, { reject
     });
     return { token, user: meResponse.data };
   } catch (error) {
-    return rejectWithValue(apiErrorMessage(error, 'Login failed. Check your username and password.'));
+    return rejectWithValue(apiErrorMessage(error, 'We could not sign you in. Please try again.'));
   }
 });
 
@@ -120,7 +146,7 @@ export const register = createAsyncThunk('auth/register', async (credentials, { 
     await api.post('/register/', credentials);
     return dispatch(login({ username: credentials.username, password: credentials.password })).unwrap();
   } catch (error) {
-    return rejectWithValue(apiErrorMessage(error, 'Could not create account.'));
+    return rejectWithValue(apiErrorMessage(error, 'We could not create your account. Please review your details and try again.'));
   }
 });
 
@@ -134,7 +160,7 @@ export const fetchOrders = createAsyncThunk('orders/fetchOrders', async (_, { ge
     const response = await api.get('/orders/', { headers: authHeader(getState) });
     return listFromResponse(response.data);
   } catch (error) {
-    return rejectWithValue(apiErrorMessage(error, 'Could not load orders.'));
+    return rejectWithValue(apiErrorMessage(error, 'We could not load your orders. Please try again.'));
   }
 });
 
@@ -155,7 +181,7 @@ export const placeOrder = createAsyncThunk('orders/placeOrder', async (items, { 
     );
     return response.data;
   } catch (error) {
-    return rejectWithValue(apiErrorMessage(error, 'Could not place order.'));
+    return rejectWithValue(apiErrorMessage(error, 'Your order was not placed. Please try again.'));
   }
 });
 
@@ -173,7 +199,7 @@ export const updateOrderStatus = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      return rejectWithValue(apiErrorMessage(error, 'Could not update order.'));
+      return rejectWithValue(apiErrorMessage(error, 'The order status could not be updated. Please try again.'));
     }
   }
 );
@@ -186,7 +212,7 @@ export const fetchAnalytics = createAsyncThunk('orders/fetchAnalytics', async (_
     const response = await api.get('/orders/analytics/', { headers: authHeader(getState) });
     return response.data;
   } catch (error) {
-    return rejectWithValue(apiErrorMessage(error, 'Could not load analytics.'));
+    return rejectWithValue(apiErrorMessage(error, 'The dashboard summary could not be loaded. Please try again.'));
   }
 });
 
@@ -222,7 +248,7 @@ const productsSlice = createSlice({
       .addCase(fetchProducts.rejected, (state, action) => {
         state.status = 'failed';
         state.items = [];
-        state.error = action.payload || 'Could not load products.';
+        state.error = action.payload || 'We could not load the products. Please try again.';
       })
       .addCase(fetchCategories.pending, (state) => {
         state.categoryStatus = 'loading';
@@ -309,7 +335,7 @@ const authSlice = createSlice({
       })
       .addCase(register.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload || 'Could not create account.';
+        state.error = action.payload || 'We could not create your account. Please try again.';
       });
   },
 });
@@ -330,7 +356,7 @@ const ordersSlice = createSlice({
       })
       .addCase(fetchOrders.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload || 'Could not load orders.';
+        state.error = action.payload || 'We could not load your orders. Please try again.';
       })
       .addCase(placeOrder.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
