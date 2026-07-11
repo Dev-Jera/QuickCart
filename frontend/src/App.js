@@ -626,18 +626,6 @@ function CartView({ setView }) {
   return (
     <main className="cart-screen">
       <section className="cart-shell">
-        <div className="cart-topline">
-          <button className="cart-brand-mark" onClick={() => setView('home')} type="button" aria-label="Go to home">
-            <img src={logoPath} alt="" aria-hidden="true" />
-            <span>QuickCart</span>
-          </button>
-          <nav className="cart-breadcrumb" aria-label="Breadcrumb">
-            <button type="button" onClick={() => setView('home')}>Home</button>
-            <span>/</span>
-            <strong>Cart</strong>
-          </nav>
-        </div>
-
         <header className="cart-heading">
           <h1>Shopping cart</h1>
           <span>{cart.length} {cart.length === 1 ? 'item' : 'items'}</span>
@@ -647,7 +635,12 @@ function CartView({ setView }) {
           <section className="cart-items-card" aria-label="Shopping cart items">
             {cart.length === 0 ? (
               <div className="cart-empty-state">
-                <div className="cart-empty-icon" aria-hidden="true">Cart</div>
+                <div className="cart-empty-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M6.75 8.25h10.5l.75 11.25H6L6.75 8.25Z" />
+                    <path d="M9 9V6.75a3 3 0 0 1 6 0V9" />
+                  </svg>
+                </div>
                 <h2>Your cart is empty</h2>
                 <p>Items you add will appear here. Browse the catalog to get started.</p>
                 <button onClick={() => setView('shop')} type="button">Browse products</button>

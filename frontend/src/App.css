@@ -1009,50 +1009,6 @@ textarea:focus {
   padding: 26px clamp(20px, 4vw, 42px) 64px;
 }
 
-.cart-topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 0 0 26px;
-}
-
-.cart-brand-mark {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: #140720;
-  background: transparent;
-  font-size: 16px;
-  font-weight: 900;
-}
-
-.cart-brand-mark img {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
-.cart-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #7b668d;
-  font-size: 13px;
-}
-
-.cart-breadcrumb button {
-  min-height: auto;
-  padding: 0;
-  color: #7b668d;
-  background: transparent;
-}
-
-.cart-breadcrumb strong {
-  color: #170b24;
-}
-
 .cart-heading {
   display: flex;
   align-items: baseline;
@@ -1107,29 +1063,18 @@ textarea:focus {
   display: grid;
   place-items: center;
   border-radius: 999px;
-  color: transparent;
+  color: #756284;
   background: #f0e7fb;
-  position: relative;
 }
 
-.cart-empty-icon::before {
-  content: "";
-  width: 18px;
-  height: 14px;
-  border: 2px solid #756284;
-  border-top: 0;
-  border-radius: 2px 2px 5px 5px;
-}
-
-.cart-empty-icon::after {
-  content: "";
-  position: absolute;
-  top: 17px;
-  left: 16px;
-  width: 20px;
-  height: 9px;
-  border-top: 2px solid #756284;
-  transform: rotate(10deg);
+.cart-empty-icon svg {
+  width: 27px;
+  height: 27px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .cart-empty-state h2 {
@@ -2981,11 +2926,6 @@ textarea:focus {
     padding: 18px 16px 42px;
   }
 
-  .cart-topline {
-    align-items: flex-start;
-    padding-bottom: 18px;
-  }
-
   .cart-layout {
     grid-template-columns: 1fr;
     gap: 18px;
@@ -3059,14 +2999,6 @@ textarea:focus {
 
   .shop-product-card .product-image {
     height: 230px;
-  }
-
-  .cart-brand-mark {
-    display: none;
-  }
-
-  .cart-topline {
-    padding-bottom: 12px;
   }
 
   .cart-heading {
