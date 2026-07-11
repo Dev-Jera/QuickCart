@@ -3061,10 +3061,19 @@ textarea:focus {
     height: 230px;
   }
 
-  .cart-topline,
+  .cart-brand-mark {
+    display: none;
+  }
+
+  .cart-topline {
+    padding-bottom: 12px;
+  }
+
   .cart-heading {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 12px 0 16px;
   }
 
   .cart-heading {
@@ -3072,11 +3081,11 @@ textarea:focus {
   }
 
   .cart-items-card {
-    min-height: 300px;
+    min-height: 250px;
   }
 
   .cart-empty-state {
-    padding: 30px 18px;
+    padding: 24px 18px;
   }
 
   .cart-list {
