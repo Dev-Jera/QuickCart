@@ -14,6 +14,7 @@ import os
 import sys
 from pathlib import Path
 
+import dj_database_url
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -58,6 +59,7 @@ INSTALLED_APPS = [
     "orders",
     "users",
     "rest_framework",
+    "corsheaders",
 ]
 
 REST_FRAMEWORK = {
@@ -73,12 +75,23 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "DJANGO_CORS_ALLOWED_ORIGINS",
+        "http://localhost:3000,http://127.0.0.1:3000",
+    ).split(",")
+    if origin.strip()
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -112,8 +125,16 @@ if "test" in sys.argv:
         }
     }
 else:
+    database_url = os.getenv("DATABASE_URL")
     DATABASES = {
-        "default": {
+        "default": dj_database_url.parse(
+            database_url,
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=not DEBUG,
+        )
+        if database_url
+        else {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": os.getenv("POSTGRES_DB", "quickcart"),
             "USER": os.getenv("POSTGRES_USER", "quickcart_user"),
@@ -157,9 +178,21 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    },
+}
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
