@@ -12,102 +12,192 @@ const authHeader = (getState) => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+// DRF returns paginated lists in production, but tests and a few local views use
+// plain arrays. Keeping this helper small lets the UI handle both shapes.
+const listFromResponse = (data) => data.results || data;
+
+const hasUsableToken = (getState) => Boolean(getState().auth.token);
+
+const apiErrorMessage = (error, fallback) => {
+  const data = error.response?.data;
+
+  if (typeof data === 'string') {
+    return data;
+  }
+
+  if (data?.detail) {
+    return data.detail;
+  }
+
+  if (data && typeof data === 'object') {
+    return Object.entries(data)
+      .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+      .join(' ');
+  }
+
+  return fallback;
+};
+
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (filters, { rejectWithValue }) => {
     try {
       const response = await api.get('/products/', { params: filters });
-      const payload = response.data.results || response.data;
-      return payload;
+      return listFromResponse(response.data);
     } catch (error) {
       return rejectWithValue('Could not load products. Make sure the backend is running.');
     }
   }
 );
 
+export const fetchCategories = createAsyncThunk(
+  'products/fetchCategories',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/categories/');
+      return listFromResponse(response.data);
+    } catch (error) {
+      return rejectWithValue('Could not load categories.');
+    }
+  }
+);
+
 export const createProduct = createAsyncThunk(
   'products/createProduct',
-  async (product, { getState }) => {
-    const response = await api.post('/products/', product, {
-      headers: authHeader(getState),
-    });
-    return response.data;
+  async (product, { getState, rejectWithValue }) => {
+    try {
+      const response = await api.post('/products/', product, {
+        headers: authHeader(getState),
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(apiErrorMessage(error, 'Could not create product.'));
+    }
   }
 );
 
 export const updateProduct = createAsyncThunk(
   'products/updateProduct',
-  async (product, { getState }) => {
-    const response = await api.patch(`/products/${product.id}/`, product, {
-      headers: authHeader(getState),
-    });
-    return response.data;
+  async (product, { getState, rejectWithValue }) => {
+    try {
+      const response = await api.patch(`/products/${product.id}/`, product, {
+        headers: authHeader(getState),
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(apiErrorMessage(error, 'Could not update product.'));
+    }
   }
 );
 
 export const deleteProduct = createAsyncThunk(
   'products/deleteProduct',
-  async (id, { getState }) => {
-    await api.delete(`/products/${id}/`, { headers: authHeader(getState) });
-    return id;
+  async (id, { getState, rejectWithValue }) => {
+    try {
+      await api.delete(`/products/${id}/`, { headers: authHeader(getState) });
+      return id;
+    } catch (error) {
+      return rejectWithValue(apiErrorMessage(error, 'Could not delete product.'));
+    }
   }
 );
 
-export const login = createAsyncThunk('auth/login', async (credentials) => {
-  const tokenResponse = await api.post('/token/', credentials);
-  const token = tokenResponse.data.access;
-  const meResponse = await api.get('/me/', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return { token, user: meResponse.data };
+export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
+  try {
+    const tokenResponse = await api.post('/token/', credentials);
+    const token = tokenResponse.data.access;
+    const meResponse = await api.get('/me/', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return { token, user: meResponse.data };
+  } catch (error) {
+    return rejectWithValue(apiErrorMessage(error, 'Login failed. Check your username and password.'));
+  }
 });
 
-export const register = createAsyncThunk('auth/register', async (credentials, { dispatch }) => {
-  await api.post('/register/', credentials);
-  return dispatch(login({ username: credentials.username, password: credentials.password })).unwrap();
+export const register = createAsyncThunk('auth/register', async (credentials, { dispatch, rejectWithValue }) => {
+  try {
+    await api.post('/register/', credentials);
+    return dispatch(login({ username: credentials.username, password: credentials.password })).unwrap();
+  } catch (error) {
+    return rejectWithValue(apiErrorMessage(error, 'Could not create account.'));
+  }
 });
 
-export const fetchOrders = createAsyncThunk('orders/fetchOrders', async (_, { getState }) => {
-  const response = await api.get('/orders/', { headers: authHeader(getState) });
-  return response.data.results || response.data;
+export const fetchOrders = createAsyncThunk('orders/fetchOrders', async (_, { getState, rejectWithValue }) => {
+  try {
+    // Avoid noisy 401s when a guest opens My Orders. The page can show a login
+    // prompt without hitting a protected endpoint.
+    if (!hasUsableToken(getState)) {
+      return rejectWithValue('Login is required to view orders.');
+    }
+    const response = await api.get('/orders/', { headers: authHeader(getState) });
+    return listFromResponse(response.data);
+  } catch (error) {
+    return rejectWithValue(apiErrorMessage(error, 'Could not load orders.'));
+  }
 });
 
-export const placeOrder = createAsyncThunk('orders/placeOrder', async (items, { getState }) => {
-  const orderItems = items.map((item) => ({
-    product_id: item.id,
-    quantity: item.quantity,
-  }));
-  const response = await api.post(
-    '/orders/',
-    { order_items: orderItems },
-    { headers: authHeader(getState) }
-  );
-  return response.data;
+export const placeOrder = createAsyncThunk('orders/placeOrder', async (items, { getState, rejectWithValue }) => {
+  try {
+    if (!hasUsableToken(getState)) {
+      return rejectWithValue('Login is required before placing an order.');
+    }
+    // The cart keeps full product objects; the API only needs id + quantity.
+    const orderItems = items.map((item) => ({
+      product_id: item.id,
+      quantity: item.quantity,
+    }));
+    const response = await api.post(
+      '/orders/',
+      { order_items: orderItems },
+      { headers: authHeader(getState) }
+    );
+    return response.data;
+  } catch (error) {
+    return rejectWithValue(apiErrorMessage(error, 'Could not place order.'));
+  }
 });
 
 export const updateOrderStatus = createAsyncThunk(
   'orders/updateOrderStatus',
-  async ({ id, status }, { getState }) => {
-    const response = await api.patch(
-      `/orders/${id}/`,
-      { status },
-      { headers: authHeader(getState) }
-    );
-    return response.data;
+  async ({ id, status }, { getState, rejectWithValue }) => {
+    try {
+      if (!hasUsableToken(getState)) {
+        return rejectWithValue('Login is required to update orders.');
+      }
+      const response = await api.patch(
+        `/orders/${id}/`,
+        { status },
+        { headers: authHeader(getState) }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(apiErrorMessage(error, 'Could not update order.'));
+    }
   }
 );
 
-export const fetchAnalytics = createAsyncThunk('orders/fetchAnalytics', async (_, { getState }) => {
-  const response = await api.get('/orders/analytics/', { headers: authHeader(getState) });
-  return response.data;
+export const fetchAnalytics = createAsyncThunk('orders/fetchAnalytics', async (_, { getState, rejectWithValue }) => {
+  try {
+    if (!hasUsableToken(getState)) {
+      return rejectWithValue('Login is required to view analytics.');
+    }
+    const response = await api.get('/orders/analytics/', { headers: authHeader(getState) });
+    return response.data;
+  } catch (error) {
+    return rejectWithValue(apiErrorMessage(error, 'Could not load analytics.'));
+  }
 });
 
 const productsSlice = createSlice({
   name: 'products',
   initialState: {
     items: [],
+    categories: [],
     selected: null,
     status: 'idle',
+    categoryStatus: 'idle',
     error: '',
     filters: { search: '', category: '', min_price: '', max_price: '' },
   },
@@ -133,6 +223,17 @@ const productsSlice = createSlice({
         state.status = 'failed';
         state.items = [];
         state.error = action.payload || 'Could not load products.';
+      })
+      .addCase(fetchCategories.pending, (state) => {
+        state.categoryStatus = 'loading';
+      })
+      .addCase(fetchCategories.fulfilled, (state, action) => {
+        state.categoryStatus = 'succeeded';
+        state.categories = action.payload;
+      })
+      .addCase(fetchCategories.rejected, (state) => {
+        state.categoryStatus = 'failed';
+        state.categories = [];
       })
       .addCase(createProduct.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
@@ -197,14 +298,18 @@ const authSlice = createSlice({
         state.token = action.payload.token;
         state.user = action.payload.user;
       })
-      .addCase(login.rejected, (state) => {
+      .addCase(login.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = 'Login failed. Check your username and password.';
+        state.error = action.payload || 'Login failed. Check your username and password.';
       })
       .addCase(register.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.token = action.payload.token;
         state.user = action.payload.user;
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || 'Could not create account.';
       });
   },
 });
@@ -215,8 +320,17 @@ const ordersSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(fetchOrders.pending, (state) => {
+        state.status = 'loading';
+        state.error = '';
+      })
       .addCase(fetchOrders.fulfilled, (state, action) => {
+        state.status = 'succeeded';
         state.items = action.payload;
+      })
+      .addCase(fetchOrders.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || 'Could not load orders.';
       })
       .addCase(placeOrder.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
