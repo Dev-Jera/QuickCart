@@ -5,7 +5,7 @@ services:
     plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input
-    startCommand: python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    startCommand: python manage.py migrate && python manage.py seed_admin && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
     healthCheckPath: /api/products/
     envVars:
       - key: PYTHON_VERSION
@@ -21,4 +21,10 @@ services:
       - key: DJANGO_CORS_ALLOWED_ORIGINS
         sync: false
       - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
         sync: false

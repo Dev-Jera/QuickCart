@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = "Create or update the local QuickCart admin account."
+    help = "Create the QuickCart admin account only when it does not exist."
 
     def add_arguments(self, parser):
         parser.add_argument("--username", default=os.getenv("ADMIN_USERNAME", "quickcart_admin"))
@@ -17,24 +17,16 @@ class Command(BaseCommand):
         email = options["email"]
         password = options["password"]
 
-        # This command is safe to run more than once. It is handy after a fresh
-        # database setup, and it also fixes an admin account that lost staff flags.
-        user, created = User.objects.get_or_create(
+        if User.objects.filter(username=username).exists():
+            self.stdout.write(f"Admin user already exists: {username}")
+            return
+
+        user = User.objects.create_user(
             username=username,
-            defaults={
-                "email": email,
-                "is_staff": True,
-                "is_superuser": True,
-                "is_active": True,
-            },
+            email=email,
+            password=password,
+            is_staff=True,
+            is_superuser=True,
+            is_active=True,
         )
-
-        user.email = email
-        user.is_staff = True
-        user.is_superuser = True
-        user.is_active = True
-        user.set_password(password)
-        user.save()
-
-        action = "Created" if created else "Updated"
-        self.stdout.write(self.style.SUCCESS(f"{action} admin user: {username}"))
+        self.stdout.write(self.style.SUCCESS(f"Created admin user: {user.username}"))
