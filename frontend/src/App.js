@@ -231,8 +231,13 @@ function Filters() {
   return (
     <section className="shop-filters" aria-label="Product filters">
       <label className="shop-search">
-        <span aria-hidden="true">Search</span>
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m16.5 16.5 4 4" />
+        </svg>
         <input
+          type="search"
+          aria-label="Search products"
           value={filters.search}
           onChange={(event) => update('search', event.target.value)}
           placeholder="Search maternal essentials"
@@ -261,26 +266,29 @@ function Filters() {
           </button>
         ))}
       </div>
-      <div className="price-filters">
+      <div className="price-filters" role="group" aria-label="Price range in Ugandan shillings">
+        <p>Price range <span>(UGX)</span></p>
         <label>
-          Min
-        <input
-          type="number"
-          min="0"
-          value={filters.min_price}
-          onChange={(event) => update('min_price', event.target.value)}
-          placeholder="0"
-        />
+          <span>From</span>
+          <input
+            type="number"
+            min="0"
+            step="1000"
+            value={filters.min_price}
+            onChange={(event) => update('min_price', event.target.value)}
+            placeholder="0"
+          />
         </label>
         <label>
-          Max
-        <input
-          type="number"
-          min="0"
-          value={filters.max_price}
-          onChange={(event) => update('max_price', event.target.value)}
-          placeholder="100"
-        />
+          <span>To</span>
+          <input
+            type="number"
+            min="0"
+            step="1000"
+            value={filters.max_price}
+            onChange={(event) => update('max_price', event.target.value)}
+            placeholder="500,000"
+          />
         </label>
       </div>
     </section>

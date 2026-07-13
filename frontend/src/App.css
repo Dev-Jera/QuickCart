@@ -2797,18 +2797,28 @@ textarea:focus {
 
 .shop-search {
   display: block;
-  margin: -84px 0 6px;
+  width: 100%;
+  margin: 0 0 6px;
 }
 
-.shop-search span {
+.shop-search svg {
+  position: absolute;
+  top: 50%;
   left: 22px;
+  width: 19px;
+  height: 19px;
   color: #7b7080;
-  font-size: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .shop-search input {
-  width: min(920px, 100%);
-  min-height: 48px;
+  width: 100%;
+  min-height: 52px;
   padding: 0 22px 0 52px;
   border: 1px solid #eadde6;
   border-radius: 999px;
@@ -2822,16 +2832,32 @@ textarea:focus {
 
 .price-filters {
   display: flex;
+  align-items: end;
   grid-column: auto;
   grid-row: auto;
   gap: 16px;
   order: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.price-filters > p {
+  margin: 0 16px 8px 0;
+  color: #3f2945;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.price-filters > p span {
+  color: #8b778f;
+  font-weight: 700;
 }
 
 .price-filters label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  gap: 5px;
   color: #7c6680;
   font-size: 11px;
   font-weight: 900;
@@ -2839,8 +2865,8 @@ textarea:focus {
 }
 
 .price-filters input {
-  width: 110px;
-  min-height: 31px;
+  width: 140px;
+  min-height: 36px;
   padding: 0 12px;
   border: 1px solid #ead8dc;
   border-radius: 8px;
@@ -2938,10 +2964,6 @@ textarea:focus {
     font-size: clamp(35px, 9vw, 52px);
   }
 
-  .shop-search {
-    margin-top: -54px;
-  }
-
   .shop-filters {
     padding: 16px;
   }
@@ -3015,10 +3037,6 @@ textarea:focus {
 
   .shop-heading p {
     font-size: 10px;
-  }
-
-  .shop-search {
-    margin-top: -34px;
   }
 
   .price-filters,
