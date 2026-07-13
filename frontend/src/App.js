@@ -26,6 +26,9 @@ const taxRate = 0.16;
 const logoPath = `${process.env.PUBLIC_URL}/quickcart-logo.png`;
 const mtnLogoPath = `${process.env.PUBLIC_URL}/mtn-logo.jfif`;
 const airtelLogoPath = `${process.env.PUBLIC_URL}/airtel-logo.png`;
+const apiOrigin = (process.env.REACT_APP_API_URL || '')
+  .replace(/\/api\/?$/, '')
+  .replace(/\/$/, '');
 
 const money = (value) => Number(value || 0).toLocaleString('en-UG', {
   style: 'currency',
@@ -81,11 +84,22 @@ const errorMessage = (error, fallback) => (
 // START: Shared product image
 // Used anywhere a product photo appears: shop cards, details, cart, etc.
 function ProductImage({ product }) {
+  const imagePath = product.image_url || product.image;
+  const imageSource = !imagePath
+    ? logoPath
+    : /^(https?:|data:|blob:)/i.test(imagePath)
+      ? imagePath
+      : `${apiOrigin}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
+
   return (
     <img
-      src={product.image_url || product.image || 'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcQoeehdlofSouUzwYsi4s_cTX12gDYfflil734o3jrqSiBDGsrU8iaRJQKeKntCX6S4Qi5I0qG1L3IMuZf4Ib9NcfAPsCmGyd-c7POHigsVzpQGv0uA6M0z'}
+      src={imageSource}
       alt={product.name}
       className="product-image"
+      onError={(event) => {
+        event.currentTarget.onerror = null;
+        event.currentTarget.src = logoPath;
+      }}
     />
   );
 }
@@ -1112,6 +1126,26 @@ function AdminView() {
 }
 // END: Frontend admin dashboard
 
+function Footer({ setView }) {
+  return (
+    <footer className="app-footer">
+      <div className="footer-inner">
+        <button className="footer-brand" onClick={() => setView('home')} type="button">
+          <img src={logoPath} alt="" />
+          <span><strong>QuickCart</strong> Maternal</span>
+        </button>
+        <nav className="footer-links" aria-label="Footer navigation">
+          <button onClick={() => setView('shop')} type="button">Shop</button>
+          <button onClick={() => setView('cart')} type="button">Cart</button>
+          <button onClick={() => setView('orders')} type="button">My Orders</button>
+        </nav>
+        <p>Made with care for mothers and little ones.</p>
+      </div>
+      <p className="footer-copyright">&copy; {new Date().getFullYear()} QuickCart. All rights reserved.</p>
+    </footer>
+  );
+}
+
 // START: Main app controller
 // This decides which page to show based on the current URL.
 function App() {
@@ -1180,6 +1214,7 @@ function App() {
       {currentView === 'auth' && <AuthView setView={setView} />}
       {currentView === 'orders' && <OrdersView setView={setView} />}
       {currentView === 'admin' && <AdminView />}
+      {currentView !== 'home' && <Footer setView={setView} />}
     </div>
   );
 }
